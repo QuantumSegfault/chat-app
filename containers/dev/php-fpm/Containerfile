@@ -1,0 +1,38 @@
+FROM php:8.4-fpm-alpine
+
+ARG UID=1000
+ARG GID=1000
+
+USER root
+
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/install-php-extensions \
+    && install-php-extensions bcmath intl mysqli pdo_mysql redis soap zip opcache \
+    && rm /usr/local/bin/install-php-extensions
+
+RUN if getent group ${GID}; then \
+    group_name=$(getent group ${GID} | cut -d: -f1); \
+    adduser -D -u ${UID} -G ${group_name} -s /bin/sh www; \
+    else \
+    addgroup -g ${GID} www && \
+    adduser -D -u ${UID} -G www -s /bin/sh www; \
+    group_name=www; \
+    fi
+
+RUN sed -i "s/user = www-data/user = www/g" /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i "s/group = www-data/group = $group_name/g" /usr/local/etc/php-fpm.d/www.conf
+
+WORKDIR /var/www
+
+COPY ./containers/dev/php-fpm/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
+
+USER www
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+EXPOSE 9000
+CMD ["php-fpm"]
