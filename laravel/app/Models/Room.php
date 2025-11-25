@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\RoomType;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Room extends Model
+{
+    use HasUlids;
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['id', 'deleted_at'];
+
+    /**
+     * Get the columns that should receive a unique identifier.
+     *
+     * @return array
+     */
+    public function uniqueIds(): array
+    {
+        return ['ulid'];
+    }
+
+    /**
+     * Get the `messages` relationship.
+     *
+     * @return HasMany
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class)->chaperone();
+    }
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => RoomType::class,
+            'archived_at' => 'datetime',
+            'deleted_at' => 'datetime',
+        ];
+    }
+}
