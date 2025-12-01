@@ -1,74 +1,28 @@
 <?php
 
-use App\Enums\RoomType;
-use App\Models\Message;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\RoomController;
 use App\Models\Room;
-use App\Models\User;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Route;
-use Laravel\Sanctum\Sanctum;
+use Illuminate\Routing;
 use Symfony\Component\Uid\Ulid;
 
-Route::get('rooms', function (Request $request) {
-    $rooms = Room::all(['ulid', 'slug', 'display_name', 'type']);
+Route::bind('room', function (string $id, Routing\Route $route): Builder {
+    if (!Ulid::isValid($id)) {
+        $room_ulid = Room::where('slug', $id)->valueOrFail('ulid');
 
-    return $rooms;
-});
+        $parameters = $route->parameters();
+        $parameters['room'] = $room_ulid;
 
-Route::get('rooms/{ident}', function (string $ident) {
-    if (!Ulid::isValid($ident)) {
-        $room_ulid = Room::where('slug', $ident)->valueOrFail('ulid');
-        return redirect(
-            route(Route::currentRouteName(), ['ident' => $room_ulid]),
-            308,
+        throw new HttpResponseException( // to immediately stop and redirect
+            redirect()->route($route->getName(), $parameters, 308),
         );
     }
 
-    return Room::where('ulid', $ident)->firstOrFail();
-})->name('room.get');
-
-Route::get('rooms/{ident}/messages', function (string $ident) {
-    if (!Ulid::isValid($ident)) {
-        $room_ulid = Room::where('slug', $ident)->valueOrFail('ulid');
-        return redirect(
-            route(Route::currentRouteName(), ['ident' => $room_ulid]),
-            308,
-        );
-    }
-
-    $room = Room::with([
-        'messages' => fn($query) => $query->select('*'),
-        'messages.sender' => fn($query) => $query->select('id', 'ulid'),
-    ])
-        ->where('ulid', $ident)
-        ->firstOrFail(['id', 'ulid']);
-    return $room->messages;
-})->name('room.messages.index');
-
-Route::get('messages', function () {
-    $messages = Message::with([
-        'room' => fn($query) => $query->select('id', 'ulid'),
-    ])->get();
-    return $messages;
+    return Room::where('ulid', $id);
 });
 
-Route::get('messages/{ulid}', function (string $ulid) {
-    return Message::with([
-        'room' => fn($query) => $query->select('id', 'ulid'),
-        'sender' => fn($query) => $query->select('id', 'ulid'),
-    ])
-        ->where('ulid', $ulid)
-        ->firstOrFail();
-});
-
-Route::get('users/{ident}', function (string $ident) {
-    if (!Ulid::isValid($ident)) {
-        $user_ulid = User::where('username', $ident)->valueOrFail('ulid');
-        return redirect(
-            route(Route::currentRouteName(), ['ident' => $user_ulid]),
-            308,
-        );
-    }
-
-    return User::where('ulid', $ident)->firstOrFail();
-})->name('user.get');
+Route::apiResource('rooms', RoomController::class);
+Route::apiResource('rooms.messages', MessageController::class)->shallow();

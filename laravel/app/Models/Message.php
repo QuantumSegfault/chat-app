@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Message extends Model
 {
     use HasUlids;
+    use SoftDeletes;
 
     /**
      * The attributes that should be hidden for serialization.
@@ -17,21 +19,11 @@ class Message extends Model
      */
     protected $hidden = [
         'id',
-        'room',
         'room_id',
-        'parent',
         'parent_id',
-        'sender',
         'sender_id',
         'deleted_at',
     ];
-
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
-    protected $appends = ['room_ulid', 'parent_ulid', 'sender_ulid'];
 
     /**
      * Get the columns that should receive a unique identifier.
@@ -117,5 +109,15 @@ class Message extends Model
             'sender_id' => 'int',
             'deleted_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'ulid';
     }
 }
