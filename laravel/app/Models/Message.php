@@ -26,6 +26,13 @@ class Message extends Model
     ];
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = ['body', 'sender_id', 'parent_id'];
+
+    /**
      * Get the columns that should receive a unique identifier.
      *
      * @return array

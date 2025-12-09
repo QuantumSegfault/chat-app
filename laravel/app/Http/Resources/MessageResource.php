@@ -17,9 +17,10 @@ class MessageResource extends JsonResource
         return [
             'ulid' => $this->ulid,
             'body' => $this->deleted_at ? null : $this->body,
+            'sender' => new SenderResource($this->whenLoaded('sender')),
+            'parent' => $this->parent?->ulid,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'sender' => new SenderResource($this->whenLoaded('sender')),
             'deleted_at' => $this->deleted_at,
         ];
     }
