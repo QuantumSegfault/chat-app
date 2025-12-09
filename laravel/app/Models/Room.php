@@ -22,6 +22,13 @@ class Room extends Model
     protected $hidden = ['id', 'deleted_at'];
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = ['slug', 'display_name', 'description', 'type'];
+
+    /**
      * Get the columns that should receive a unique identifier.
      *
      * @return array
@@ -39,6 +46,11 @@ class Room extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class)->chaperone();
+    }
+
+    protected function slug(): Attribute
+    {
+        return Attribute::make(set: fn(string $value) => strtolower($value));
     }
 
     /**

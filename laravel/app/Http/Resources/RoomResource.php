@@ -18,7 +18,14 @@ class RoomResource extends JsonResource
             'ulid' => $this->ulid,
             'slug' => $this->slug,
             'display_name' => $this->display_name,
-            'description' => $this->whenHas('description'),
+            'description' => $this->when(
+                $this->resource->wasRecentlyCreated ||
+                    \array_key_exists(
+                        'description',
+                        $this->resource->getAttributes(),
+                    ),
+                $this->description,
+            ),
             'type' => $this->type,
             'created_at' => $this->created_at,
             'archived_at' => $this->archived_at,
