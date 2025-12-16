@@ -1,0 +1,3 @@
+Dummy file to request during Vite container health checks.
+
+Do not delete!

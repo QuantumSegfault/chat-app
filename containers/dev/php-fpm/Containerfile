@@ -6,10 +6,14 @@ ARG GID=1000
 USER root
 
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-
-RUN chmod +x /usr/local/bin/install-php-extensions \
-    && install-php-extensions bcmath intl mysqli pdo_mysql redis soap zip opcache \
+RUN install-php-extensions bcmath intl mysqli pdo_mysql redis soap zip opcache \
     && rm /usr/local/bin/install-php-extensions
+
+
+ADD --chmod=0755 https://raw.githubusercontent.com/renatomefi/php-fpm-healthcheck/refs/tags/v0.6.0/php-fpm-healthcheck /usr/local/bin/
+RUN apk add --no-cache fcgi
+RUN set -xe && echo "pm.status_path = /status" >> /usr/local/etc/php-fpm.d/zz-docker.conf
+
 
 RUN if getent group ${GID}; then \
     group_name=$(getent group ${GID} | cut -d: -f1); \

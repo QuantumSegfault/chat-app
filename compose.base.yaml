@@ -11,6 +11,12 @@ services:
     secrets:
       - db_password
       - db_root_password
+    healthcheck:
+      test: healthcheck.sh --connect --innodb_initialized || exit 1
+      start_period: 3s
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   db_data:

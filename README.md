@@ -32,18 +32,21 @@ NOTE: `prod` environment has not been prepared yet. Non-functional.
     touch containers/dev/secrets/laravel_app_key
     ```
 3. Start the containers: `./compose.sh dev up --build -d`
+    
+    Some containers (namely `vite`) will fail to start. This is expected.
+
 4. Drop into the dev-cli shell: `./dev-cli`
 5. Run `composer install`
-6. Run the DB migrations: `php artisan migrate`
-7. While still in the dev-cli, generate a new `laravel_app_key` into a file, exit the `dev-cli`, move it into place, and restart the containers
+6. Run `npm install`
+7. Run the DB migrations: `php artisan migrate`
+8. While still in the dev-cli, generate a new `laravel_app_key` into a file, exit the `dev-cli`, move it into place, and restart the containers
     ```
     php artisan key:generate --show > laravel_app_key
     exit
     mv laravel/laravel_app_key containers/dev/secrets
-    ./compose.sh dev stop
-    ./compose.sh dev start
+    ./compose.sh dev restart
     ```
-8. Navigate to http://localhost:8080
+9. Navigate to http://localhost:8080
 ----
 
 ## Internals

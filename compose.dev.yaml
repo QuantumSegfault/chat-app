@@ -8,20 +8,41 @@ services:
       args:
         UID: ${WWW_UID:-1000}
         GID: ${WWW_GID:-1000}
-
     env_file: containers/dev/.env
-
     secrets:
       - db_password
       - laravel_app_key
-
     volumes:
       - ./laravel:/var/www:ro
       - ./laravel/storage:/var/www/storage:rw
-
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: php-fpm-healthcheck || exit 1
+      start_period: 3s
+      interval: 10s
+      timeout: 1s
+      retries: 3
+
+  vite:
+    image: node:24-alpine
+    working_dir: /var/www
+    volumes:
+      - ./laravel/resources:/var/www/resources:ro
+      - ./laravel/node_modules:/var/www/node_modules:rw
+      - ./laravel/public:/var/www/public:rw
+      - ./laravel/vite.config.js:/var/www/vite.config.js:ro
+    ports:
+      - 5173:5173
+    command: npx vite --host
+    env_file: containers/dev/.env
+    healthcheck:
+      test: wget -nv -t1 --spider 'http://localhost:5173/resources/healthcheck.txt' || exit 1
+      start_period: 3s
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   nginx:
     image: nginx:1.24-alpine
@@ -32,7 +53,9 @@ services:
       - 8080:80
     depends_on:
       php-fpm:
-        condition: service_started
+        condition: service_healthy
+      vite:
+        condition: service_healthy
 
   cli:
     build:
