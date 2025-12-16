@@ -26,3 +26,7 @@ Route::bind('room', function (string $id, Routing\Route $route): Builder {
 
 Route::apiResource('rooms', RoomController::class);
 Route::apiResource('rooms.messages', MessageController::class)->shallow();
+
+Route::fallback(function () {
+    abort(404, 'The requested resource could not be found.');
+});
